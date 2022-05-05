@@ -6,7 +6,7 @@ const requestAuth = (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
   const redirectUrl = process.env.SPOTIFY_REDIRECT_URL;
 
-  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&show_dialog=true&scope=user-follow-read playlist-modify-private`;
+  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&show_dialog=true&scope=user-follow-read playlist-modify-private user-read-private`;
   
   return res.status(200).json({
     status: 200,
@@ -16,7 +16,13 @@ const requestAuth = (req, res) => {
 }
 
 const getToken = async(req, res) =>{
-  const body = `grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUrl}`;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  const clientId = process.env.SPOTIFY_CLIENT_ID; 
+  const redirectUrl = process.env.SPOTIFY_REDIRECT_URL;
+  let refreshToken
+  let accessToken
+
+  const body = `grant_type=authorization_code&code=${req.body.code}&redirect_uri=${redirectUrl}`;
 
   await axios.post('https://accounts.spotify.com/api/token', body, {
     headers: {
@@ -26,22 +32,23 @@ const getToken = async(req, res) =>{
   })
   .then((res) => {
     console.log("Access Token: ",res.data.access_token, "\nRefresh Token: ",res.data.refresh_token);
-    localStorage.setItem("access_token", res.data.access_token); 
-    localStorage.setItem("refresh_token", res.data.refresh_token);
+
+    accessToken = res.data.access_token;
+    refreshToken = res.data.refresh_token;
   })
   .catch((error) => {
     console.log(error);
   });
-  
-  window.history.pushState("", "", redirectUrl);// clears URL of spotify access token in URL
-}
+
+
+
+  // db.User.find({spotifyId === })
+};
 
 module.exports = {
   requestAuth,
+  getToken,
 }
-
-// require('dotenv').config()
-
 
 // function App() {
 //   const clientId = process.env.CLIENT_ID; 
@@ -50,31 +57,6 @@ module.exports = {
 //   let authCode
 //   let followedArtists 
 
-//   const requestAuth = () => {
-//     const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&show_dialog=true&scope=user-follow-read playlist-modify-private`; 
-//     window.location.href = authUrl;
-//   }
-
-//   const getToken = async () => {
-//     const body = `grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUrl}`;
-
-//     await axios.post('https://accounts.spotify.com/api/token', body, {
-//       headers: {
-//         'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64'), 
-//         'Content-Type': 'application/x-www-form-urlencoded'
-//       }
-//     })
-//     .then((res) => {
-//       console.log("Access Token: ",res.data.access_token, "\nRefresh Token: ",res.data.refresh_token);
-//       localStorage.setItem("access_token", res.data.access_token); 
-//       localStorage.setItem("refresh_token", res.data.refresh_token);
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-    
-//     window.history.pushState("", "", redirectUrl);// clears URL of spotify access token in URL
-//   }
 
 //   const refreshToken = async() => {
 //     const refreshToken = localStorage.getItem('refresh_token');

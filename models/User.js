@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
     name: String, 
     spotifyId: String,
     artists: [concertSchema],
+    accessToken: String, 
+    refreshToken: String
 })
 
 module.exports = mongoose.model('users', userSchema)

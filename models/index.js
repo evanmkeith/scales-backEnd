@@ -11,5 +11,5 @@ mongoose
     })
 
 module.exports = {
-    user: require('./User'),
+    User: require('./User'),
 }

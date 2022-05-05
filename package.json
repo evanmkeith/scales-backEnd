@@ -1,0 +1,25 @@
+{
+  "name": "scales-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evanmkeith/scales-backEnd.git"
+  },
+  "author": "Evan Keith",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/evanmkeith/scales-backEnd/issues"
+  },
+  "homepage": "https://github.com/evanmkeith/scales-backEnd#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.1",
+    "mongoose": "^6.3.2"
+  }
+}

@@ -31,13 +31,13 @@ const PORT = 4000; // full caps signify a config variable
 
 
 /* ====== Routes  ====== */
-app.use("/api", routes);
+app.use('/api', routes);
 
-app.all("/api/*", (req, res, next) => {
-    res.send(
-        "Api url endpoint not defined."
-    );
-})
+// app.all("/api/*", (req, res, next) => {
+//     res.send(
+//         "Api url endpoint not defined."
+//     );
+// })
 	
 /* ====== Server bind  ====== */
 // bind the application to the port via app.listen(number, optional function to do after bind)

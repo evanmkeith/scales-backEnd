@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/evanmkeith/scales-backEnd#readme",
   "dependencies": {
+    "axios": "^0.27.2",
+    "buffer": "^6.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.18.1",

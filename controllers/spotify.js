@@ -39,15 +39,17 @@ const getToken = async(req, res) =>{
   .catch((error) => {
     console.log(error);
   });
-
-
-
   // db.User.find({spotifyId === })
 };
+
+const getUserSpotifyProfile = async() => {
+  
+}
 
 module.exports = {
   requestAuth,
   getToken,
+  getUserSpotifyProfile,
 }
 
 // function App() {

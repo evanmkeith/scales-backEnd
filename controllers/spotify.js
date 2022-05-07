@@ -1,6 +1,7 @@
 const axios = require('axios'); 
 const Buffer = require('buffer/').Buffer
 const db = require('../models'); 
+const jwt = require('jsonwebtoken');
 
 const requestAuth = (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
@@ -95,7 +96,7 @@ const findUserAccount = (spotifyUser, accessToken, refreshToken) => {
 
 
 const refreshAuthToken = async() => {
-      const refreshToken = localStorage.getItem('refresh_token');
+      let refreshToken;
       const body = `grant_type=refresh_token&refresh_token=${refreshToken}`;
       await axios.post('https://accounts.spotify.com/api/token', body, {
         headers: { 
@@ -115,5 +116,4 @@ const refreshAuthToken = async() => {
 module.exports = {
   requestAuth,
   getToken,
-  getUserSpotifyProfile,
 }

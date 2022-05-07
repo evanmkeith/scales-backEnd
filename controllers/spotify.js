@@ -13,14 +13,12 @@ const requestAuth = (req, res) => {
     message: 'Success!',
     authUrl
   });
-}
+};
 
 const getToken = async(req, res) =>{
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
   const redirectUrl = process.env.SPOTIFY_REDIRECT_URL;
-  let refreshToken
-  let accessToken
 
   const body = `grant_type=authorization_code&code=${req.body.code}&redirect_uri=${redirectUrl}`;
 
@@ -31,96 +29,91 @@ const getToken = async(req, res) =>{
     }
   })
   .then((res) => {
-    console.log("Access Token: ",res.data.access_token, "\nRefresh Token: ",res.data.refresh_token);
-
-    accessToken = res.data.access_token;
-    refreshToken = res.data.refresh_token;
+    const accessToken = res.data.access_token
+    const refreshToken = res.data.refresh_token
+    getUserSpotifyProfile(accessToken, refreshToken);
   })
   .catch((error) => {
     console.log(error);
   });
-  // db.User.find({spotifyId === })
 };
 
-const getUserSpotifyProfile = async() => {
-  
+const getUserSpotifyProfile = async(accessToken, refreshToken) => {
+  await axios.get('https://api.spotify.com/v1/me', {
+      headers: { 
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type' : 'application/json'
+      }
+    }).then((res) => {
+      console.log('User Spotify Profile: ', res.data);
+      const spotifyUser = res.data;
+      return findUserAccount(spotifyUser, accessToken, refreshToken);
+    }).catch((error) => {
+    console.log(error);
+      if(error.request.status === 401){
+        console.log(error);
+        console.log('refreshing token');
+        refreshAuthToken();
+        return getUserSpotifyProfile();
+      } else{
+        console.log("Error Message:\n ", error);
+      }
+    });
+};
+
+const findUserAccount = (spotifyUser, accessToken, refreshToken) => {
+  db.User.find({spotifyId: spotifyUser.id}, (err, foundUser) => {
+    if( foundUser.length > 0 ) { 
+      db.User.findByIdAndUpdate(foundUser[0]._id, {
+        $set: {
+          accessToken: accessToken, 
+          refreshToken: refreshToken
+        }
+      }, 
+      {new: true}, 
+      (err, updatedUser) => {
+        console.log(err); 
+        console.log(updatedUser);
+      }
+      )
+    } else {
+        db.User.create({
+          name : spotifyUser.display_name, 
+          spotifyId: spotifyUser.id,
+          accessToken: accessToken, 
+          refreshToken: refreshToken
+        },
+        (err, createdUser) => {
+          if(err){ 
+            return err
+          }
+          return  createdUser
+        })
+      }
+    })
 }
+
+
+const refreshAuthToken = async() => {
+      const refreshToken = localStorage.getItem('refresh_token');
+      const body = `grant_type=refresh_token&refresh_token=${refreshToken}`;
+      await axios.post('https://accounts.spotify.com/api/token', body, {
+        headers: { 
+          'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+      .then((res) => {
+        console.log(res);
+        accessToken = res.data.access_token; 
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+    }
 
 module.exports = {
   requestAuth,
   getToken,
   getUserSpotifyProfile,
 }
-
-// function App() {
-//   const clientId = process.env.CLIENT_ID; 
-//   const clientSecret = process.env.CLIENT_SECRET; 
-//   const redirectUrl = process.env.REDIRECT_URL;
-//   let authCode
-//   let followedArtists 
-
-
-//   const refreshToken = async() => {
-//     const refreshToken = localStorage.getItem('refresh_token');
-//     const body = `grant_type=refresh_token&refresh_token=${refreshToken}`;
-//     await axios.post('https://accounts.spotify.com/api/token', body, {
-//       headers: { 
-//         'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64'),
-//         'Content-Type': 'application/x-www-form-urlencoded'
-//       }
-//     })
-//     .then((res) => {
-//       console.log(res);
-//       localStorage.setItem("access_token", res.data.access_token); 
-//     })
-//     .catch((error) => {
-//       console.log(error)
-//     })
-//   }
-
-//   const getFollowedArtists = async() => {
-//     console.log(localStorage.getItem('access_token'));
-//     const accessToken = localStorage.getItem('access_token');
-//     console.log("access token: ", accessToken);
-
-//     await axios.get('https://api.spotify.com/v1/me/following?type=artist', {
-//       headers: { 
-//         'Authorization': `Bearer ${accessToken}`,
-//         'Content-Type' : 'application/json'
-//       }
-//     }).then((res) => {
-//       console.log('Followed Artist: ', res);
-//       followedArtists = res.data.artists.items
-//       console.log(followedArtists);
-//     }).catch((error) => {
-//       if(error.request.status === 401){
-//         console.log(error);
-//         console.log('refreshing token');
-//         refreshToken();
-//         getFollowedArtists();
-//       } else{
-//         console.log("Error Message: ", error);
-//       }
-//     })
-//   }
-
-//   useEffect(() => {
-//     if(window.location.href.includes('code')){
-//       authCode = window.location.href.split('=')[1];
-//       getToken();
-//     };
-//   }, [])
-
-//   return (
-//     <div>
-//       <button onClick={requestAuth}>Login with Spotify</button>
-//       <h3>Artists I'm following</h3>
-//       <button onClick={getFollowedArtists}>Get artists I'm following</button>
-
-//       <div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default App;

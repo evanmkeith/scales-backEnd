@@ -3,5 +3,6 @@ const ctrl = require("../controllers");
 
 router.post("/request_auth", ctrl.spotify.requestAuth);
 router.post("/get_token", ctrl.spotify.getToken);
+router.post("/create_play_list", ctrl.spotify.createSpotifyPlaylist);
 
 module.exports = router;

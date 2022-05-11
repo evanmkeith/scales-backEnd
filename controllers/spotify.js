@@ -7,7 +7,7 @@ const requestAuth = (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
   const redirectUrl = process.env.SPOTIFY_REDIRECT_URL;
 
-  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&show_dialog=true&scope=user-follow-read playlist-modify-private user-read-private`;
+  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&scope=user-follow-read playlist-modify-private user-read-private`;
   
   return res.status(200).json({
     status: 200,
@@ -16,7 +16,7 @@ const requestAuth = (req, res) => {
   });
 };
 
-const getToken = async(req, res) =>{
+const getToken = async(req, response) =>{
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
   const redirectUrl = process.env.SPOTIFY_REDIRECT_URL;
@@ -32,14 +32,14 @@ const getToken = async(req, res) =>{
   .then((res) => {
     const accessToken = res.data.access_token
     const refreshToken = res.data.refresh_token
-    getUserSpotifyProfile(accessToken, refreshToken);
+    return getUserSpotifyProfile(req, response, accessToken, refreshToken);
   })
   .catch((error) => {
     console.log(error);
   });
 };
 
-const getUserSpotifyProfile = async(accessToken, refreshToken) => {
+const getUserSpotifyProfile = async(req, response, accessToken, refreshToken) => {
   await axios.get('https://api.spotify.com/v1/me', {
       headers: { 
         'Authorization': `Bearer ${accessToken}`,
@@ -48,7 +48,7 @@ const getUserSpotifyProfile = async(accessToken, refreshToken) => {
     }).then((res) => {
       console.log('User Spotify Profile: ', res.data);
       const spotifyUser = res.data;
-      return findUserAccount(spotifyUser, accessToken, refreshToken);
+      return findUserAccount(req, response, spotifyUser, accessToken, refreshToken);
     }).catch((error) => {
     console.log(error);
       if(error.request.status === 401){
@@ -62,8 +62,8 @@ const getUserSpotifyProfile = async(accessToken, refreshToken) => {
     });
 };
 
-const findUserAccount = (spotifyUser, accessToken, refreshToken) => {
-  db.User.find({spotifyId: spotifyUser.id}, (err, foundUser) => {
+const findUserAccount = async(req, response, spotifyUser, accessToken, refreshToken) => {
+  await db.User.find({spotifyId: spotifyUser.id}, (err, foundUser) => {
     if( foundUser.length > 0 ) { 
       db.User.findByIdAndUpdate(foundUser[0]._id, {
         $set: {
@@ -76,7 +76,14 @@ const findUserAccount = (spotifyUser, accessToken, refreshToken) => {
         console.log(err); 
         console.log(updatedUser);
       }
-      )
+      ) 
+      const token = jwt.sign({user_id:  foundUser[0]._id}, "pestocat", {expiresIn: '6h'});
+      return response.status(200).json({
+          status: 200,
+          message: 'Success!',
+          token
+        });
+
     } else {
         db.User.create({
           name : spotifyUser.display_name, 
@@ -93,7 +100,6 @@ const findUserAccount = (spotifyUser, accessToken, refreshToken) => {
       }
     })
 }
-
 
 const refreshAuthToken = async() => {
       let refreshToken;
@@ -113,7 +119,34 @@ const refreshAuthToken = async() => {
       })
     }
 
+const decodeJwt = (token) => {
+  var base64Url = token.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+
+  const id = JSON.parse(jsonPayload);
+
+  return id
+}
+
+
+const createSpotifyPlaylist = async(req, res) => {
+  const token = req.body.token;
+  
+  const id = decodeJwt(token);
+
+  return res.status(200).json({
+    status: 200,
+    message: 'Success!',
+    id
+  });
+};
+
 module.exports = {
   requestAuth,
   getToken,
+  createSpotifyPlaylist
 }

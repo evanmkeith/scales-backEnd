@@ -5,12 +5,18 @@ const concertSchema = new mongoose.Schema({
     seenLive: Boolean
 })
 
-const userSchema = new mongoose.Schema({
-    name: String, 
-    spotifyId: String,
-    artists: [concertSchema],
-    accessToken: String, 
-    refreshToken: String
-})
+const userSchema = new mongoose.Schema(
+    {
+        name: String, 
+        spotifyId: String,
+        img: String,
+        artists: [concertSchema],
+        accessToken: String, 
+        refreshToken: String
+    }, 
+    {
+        timestamps: true
+    }
+)
 
 module.exports = mongoose.model('users', userSchema)

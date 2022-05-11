@@ -7,7 +7,7 @@ mongoose
         console.log(`MongoDB connected at ${db.host}: ${db.port}`)
     })
     .catch((err) => {
-        console.log(`MongoDB failed at error: ${err}`)
+        console.log(`MongoDB failed at error: ${err}`)``
     })
 
 module.exports = {

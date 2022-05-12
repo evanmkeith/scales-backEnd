@@ -2,6 +2,7 @@ const axios = require('axios');
 const Buffer = require('buffer/').Buffer
 const db = require('../models'); 
 const jwt = require('jsonwebtoken');
+const { use } = require('express/lib/router');
 
 const requestAuth = (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
@@ -77,7 +78,7 @@ const findUserAccount = async(req, response, spotifyUser, accessToken, refreshTo
         console.log(updatedUser);
       }
       ) 
-      const token = jwt.sign({user_id:  foundUser[0]._id}, "pestocat", {expiresIn: '6h'});
+      const token = jwt.sign({userId:  foundUser[0]._id}, "pestocat", {expiresIn: '6h'});
       return response.status(200).json({
           status: 200,
           message: 'Success!',
@@ -133,17 +134,54 @@ const decodeJwt = (token) => {
 }
 
 
-const createSpotifyPlaylist = async(req, res) => {
+const createSpotifyPlaylist = async(req, response) => {
   const token = req.body.token;
-  
-  const id = decodeJwt(token);
+  const userId = decodeJwt(token);
+  const data = {
+    "name": "Scales App", 
+    "description": "Playlist made and managed by your Scales app account.",
+    "public": false
+  };
 
-  return res.status(200).json({
-    status: 200,
-    message: 'Success!',
-    id
-  });
-};
+
+  await db.User.findById(userId.userId).then(async(res) => {
+    const user = res
+    if(!user.playlistId){
+      await axios.post(`https://api.spotify.com/v1/users/${user.spotifyId}/playlists`, data, {
+        headers: { 
+          'Authorization': `Bearer ${user.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then( async(res) => {
+        await db.User.findByIdAndUpdate(user._id, {playlistId: res.data.id}, (err, updatedUser) => {
+          if(err){
+            console.log(err);
+          } else {
+            console.log(updatedUser);
+          }
+        })
+        console.log("Created Playlist: ",res.data.id); 
+      })
+      .catch((error) => {
+        console.log(error)
+      });
+
+      return response.status(201).json({
+        status: 201,
+        message: 'Success! playlist created.',
+      });
+    } else {
+      return response.status(200).json({
+        status: 200,
+        message: 'user already has playlist.',
+      });
+    }
+  }).catch((error) => {
+      console.log(error)
+    })
+  };
+
 
 module.exports = {
   requestAuth,

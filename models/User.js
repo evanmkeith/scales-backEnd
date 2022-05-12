@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema(
         img: String,
         artists: [concertSchema],
         accessToken: String, 
-        refreshToken: String
+        refreshToken: String, 
+        playlistId: String
     }, 
     {
         timestamps: true

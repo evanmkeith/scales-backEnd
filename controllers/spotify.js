@@ -121,18 +121,16 @@ const refreshAuthToken = async() => {
     }
 
 const decodeJwt = (token) => {
-  var base64Url = token.split('.')[1];
-  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-
-  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+  console.log(token)
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(Buffer.from(base64, 'base64').toString('ascii').split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
-
   const id = JSON.parse(jsonPayload);
 
   return id
-}
-
+};
 
 const createSpotifyPlaylist = async(req, response) => {
   const token = req.body.token;
@@ -143,9 +141,8 @@ const createSpotifyPlaylist = async(req, response) => {
     "public": false
   };
 
-
   await db.User.findById(userId.userId).then(async(res) => {
-    const user = res
+    const user = res;
     if(!user.playlistId){
       await axios.post(`https://api.spotify.com/v1/users/${user.spotifyId}/playlists`, data, {
         headers: { 
@@ -183,8 +180,39 @@ const createSpotifyPlaylist = async(req, response) => {
   };
 
 
+const getPlaylist = async(req, response) => {
+  console.log("Req.body: ", req.body);
+  const token = req.body.token;
+  const userId = decodeJwt(token);
+
+  await db.User.findById(userId.userId).then(async(res) => {
+    const user = res;
+    if(user.playlistId) {
+      await axios.get(`https://api.spotify.com/v1/playlists/${user.playlistId}/tracks`, {
+        headers: { 
+          'Authorization': `Bearer ${user.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }).then((res) => {
+        const tracks = res.data.items;
+        const accessToken = user.accessToken;
+        return response.status(200).json({
+          status: 200,
+          message: 'Received Playlist',
+          tracks, 
+          accessToken
+        });
+      })
+    };
+  }).catch((error) => {
+    console.log(error);
+  })
+}
+
 module.exports = {
   requestAuth,
   getToken,
-  createSpotifyPlaylist
+  createSpotifyPlaylist, 
+  getPlaylist,
+
 }

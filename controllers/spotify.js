@@ -216,7 +216,6 @@ const removeTrack = async(req, res) => {
   console.log("Access Token: ", accessToken);
   console.log(`URI: ${uri}`);
   console.log("playlistId: " ,playlistId)
-  //const tracks = { "tracks": [{ "uri": uri }] }
 
   await axios.delete(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, { 
     headers: { 
@@ -237,11 +236,40 @@ const removeTrack = async(req, res) => {
   })
 };
 
+const searchAlbums = async (req, res) => {
+  console.log("ReQ ",req);
+  const accessToken = req.body.accessToken;
+  const search = req.body.search;
+  console.log("Access Token",accessToken);
+
+  await axios.get(`https://api.spotify.com/v1/search?query=${search}&type=album`, {
+    headers: { 
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type' : 'application/json'
+    }
+  }).then((response) => {
+    console.log(response.data.albums.items);
+    const results = response.data.albums.items;
+    return res.status(200).json({
+      status: 200,
+      message: 'received results',
+      results
+    })
+  }).catch((error) => {
+    console.log(error);
+  })
+};
+
+const addTrack = async (req, res) => {
+  return
+}
+
 module.exports = {
   requestAuth,
   getToken,
   createSpotifyPlaylist, 
   getPlaylist,
   removeTrack,
-
+  searchAlbums, 
+  addTrack
 }

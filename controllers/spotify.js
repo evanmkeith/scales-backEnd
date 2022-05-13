@@ -1,14 +1,13 @@
 const axios = require('axios'); 
 const Buffer = require('buffer/').Buffer
 const db = require('../models'); 
-const jwt = require('jsonwebtoken');
-const { use } = require('express/lib/router');
+// const jwt = require('jsonwebtoken');
 
 const requestAuth = (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
   const redirectUrl = process.env.SPOTIFY_REDIRECT_URL;
 
-  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&scope=user-follow-read playlist-modify-private user-read-private`;
+  const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUrl}&scope=user-follow-read playlist-modify-private user-read-private streaming user-read-email user-read-playback-state user-modify-playback-state user-library-read user-library-modify`;
   
   return res.status(200).json({
     status: 200,
@@ -78,7 +77,11 @@ const findUserAccount = async(req, response, spotifyUser, accessToken, refreshTo
         console.log(updatedUser);
       }
       ) 
-      const token = jwt.sign({userId:  foundUser[0]._id}, "pestocat", {expiresIn: '6h'});
+      //const token = jwt.sign({userId:  foundUser[0]._id}, "pestocat", {expiresIn: '6h'});
+      const token = {
+        userId: foundUser[0]._id, 
+        accessToken: foundUser[0].accessToken,
+      }
       return response.status(200).json({
           status: 200,
           message: 'Success!',
@@ -120,28 +123,27 @@ const refreshAuthToken = async() => {
       })
     }
 
-const decodeJwt = (token) => {
-  console.log(token)
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(Buffer.from(base64, 'base64').toString('ascii').split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-  }).join(''));
-  const id = JSON.parse(jsonPayload);
+// const decodeJwt = (token) => {
+//   console.log(token)
+//   const base64Url = token.split('.')[1];
+//   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+//   const jsonPayload = decodeURIComponent(Buffer.from(base64, 'base64').toString('ascii').split('').map(function(c) {
+//       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+//   }).join(''));
+//   const id = JSON.parse(jsonPayload);
 
-  return id
-};
+//   return id
+// };
 
 const createSpotifyPlaylist = async(req, response) => {
-  const token = req.body.token;
-  const userId = decodeJwt(token);
+  const userId = req.body.token.userId;
   const data = {
     "name": "Scales App", 
     "description": "Playlist made and managed by your Scales app account.",
     "public": false
   };
 
-  await db.User.findById(userId.userId).then(async(res) => {
+  await db.User.findById(userId).then(async(res) => {
     const user = res;
     if(!user.playlistId){
       await axios.post(`https://api.spotify.com/v1/users/${user.spotifyId}/playlists`, data, {
@@ -181,11 +183,9 @@ const createSpotifyPlaylist = async(req, response) => {
 
 
 const getPlaylist = async(req, response) => {
-  console.log("Req.body: ", req.body);
-  const token = req.body.token;
-  const userId = decodeJwt(token);
+  const userId = req.body.token.userId;
 
-  await db.User.findById(userId.userId).then(async(res) => {
+  await db.User.findById(userId).then(async(res) => {
     const user = res;
     if(user.playlistId) {
       await axios.get(`https://api.spotify.com/v1/playlists/${user.playlistId}/tracks`, {
@@ -195,12 +195,19 @@ const getPlaylist = async(req, response) => {
         }
       }).then((res) => {
         const tracks = res.data.items;
-        const accessToken = user.accessToken;
+        let newTracks = [];
+        tracks.map(track => {
+          newTracks.push({
+              artist: track.track.artists[0].name,
+              title: track.track.name, 
+              uri: track.track.uri, 
+              albumUrl: track.track.album.images[2].url
+          });
+      });
         return response.status(200).json({
           status: 200,
           message: 'Received Playlist',
-          tracks, 
-          accessToken
+          newTracks
         });
       })
     };
@@ -209,10 +216,17 @@ const getPlaylist = async(req, response) => {
   })
 }
 
+const removeTrack = async(req, res) => {
+  const trackUri = req.body.track.uri;
+  console.log(trackUri)
+  
+}
+
 module.exports = {
   requestAuth,
   getToken,
   createSpotifyPlaylist, 
   getPlaylist,
-
+  removeTrack,
+  
 }

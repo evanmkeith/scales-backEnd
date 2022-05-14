@@ -47,7 +47,22 @@ const addArtist = async(req, res) => {
     await db.User.findByIdAndUpdate(req.body.id, {
         $addToSet: { artists: {artist: req.body.artist}}
     }).then((user) => {
-        console.log(user)
+        return res.status(200).json({
+            message: "added artist", 
+        })
+    }).catch((err) => {
+        console.log(err);
+    })
+}
+
+const removeArtist = async(req, res) => {
+    await db.User.updateOne({_id: req.body.id}, {
+        $pull: {'artists': {'_id': req.body.artistId}}
+    }).then((user) => {
+        return res.status(200).json({
+            message: "Removed artist", 
+
+        })
     }).catch((err) => {
         console.log(err);
     })
@@ -69,5 +84,6 @@ module.exports = {
     userInfo,
     editProfile,
     addArtist, 
-    destroy
+    destroy, 
+    removeArtist
   }

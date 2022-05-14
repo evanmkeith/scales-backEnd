@@ -47,8 +47,16 @@ const addArtist = async(req, res) => {
 
 }
 
-const destroy = async(req, res) => {
-
+const destroy = async(req, response) => {
+    await db.User.findByIdAndDelete(req.body.id).then((res) => {
+        console.log(res);
+        return response.status(200).json({
+            message: "User Destroyed", 
+            res
+        })
+    }).catch((err) => {
+        console.log(err);
+    })
 }
 
 module.exports = {

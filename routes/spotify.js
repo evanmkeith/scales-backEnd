@@ -8,5 +8,6 @@ router.post("/get_play_list", ctrl.spotify.getPlaylist);
 router.post("/remove_track", ctrl.spotify.removeTrack);
 router.post("/search", ctrl.spotify.searchAlbums);
 router.post("/add_track", ctrl.spotify.addTrack);
+router.post("/get_album_tracks", ctrl.spotify.getAlbumTracks);
 
 module.exports = router;

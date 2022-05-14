@@ -240,7 +240,6 @@ const searchAlbums = async (req, res) => {
   console.log("ReQ ",req);
   const accessToken = req.body.accessToken;
   const search = req.body.search;
-  console.log("Access Token",accessToken);
 
   await axios.get(`https://api.spotify.com/v1/search?query=${search}&type=album`, {
     headers: { 
@@ -248,12 +247,21 @@ const searchAlbums = async (req, res) => {
       'Content-Type' : 'application/json'
     }
   }).then((response) => {
-    console.log(response.data.albums.items);
     const results = response.data.albums.items;
+    let albums = [];
+    results.map((album) => {
+      albums.push({
+        id: album.id, 
+        uri: album.uri,
+        name: album.name, 
+        img: album.images[2], 
+        artist: album.artists
+      })
+    }); 
     return res.status(200).json({
       status: 200,
       message: 'received results',
-      results
+      albums
     })
   }).catch((error) => {
     console.log(error);
@@ -264,6 +272,34 @@ const addTrack = async (req, res) => {
   return
 }
 
+const getAlbumTracks = async (req, response) => {
+  const albumId = req.body.albumId;
+  const accessToken = req.body.accessToken;
+
+  await axios.get(`https://api.spotify.com/v1/albums/${albumId}/tracks`, {
+    headers: { 
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type' : 'application/json'
+    }
+  }).then((res) => {
+    const tracks = res.data.items;
+    let albumTracks = [];
+    tracks.map((track) => {
+      albumTracks.push({
+        title: track.name,
+        uri: track.uri,
+      })
+    })
+    return response.status(200).json({
+    status: 200,
+    message: 'received tracks',
+    albumTracks
+    })
+  }).catch((err) => {
+    console.log(err);
+  })
+}
+
 module.exports = {
   requestAuth,
   getToken,
@@ -271,5 +307,6 @@ module.exports = {
   getPlaylist,
   removeTrack,
   searchAlbums, 
-  addTrack
+  addTrack, 
+  getAlbumTracks
 }

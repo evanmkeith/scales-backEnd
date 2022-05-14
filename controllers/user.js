@@ -21,8 +21,26 @@ const userInfo = async(req, res) => {
     })
 };
 
-const editProfile = async(req, res) => {
+const editProfile = async(req, response) => {
+    await db.User.findByIdAndUpdate(
+        req.body.id, 
+        req.body.body, 
+        {new: true}).then(
+        (res) => {
+            const image = res.image ? res.img : 'https://picsum.photos/200/200?grayscale';
 
+            const updatedUser = {
+                name: res.name, 
+                img: image, 
+                artists: res.artists
+            }
+            return response.status(200).json({
+                message: "Updated User", 
+                updatedUser
+            })
+        }).catch((err) => { 
+            console.log(err);
+        })
 }
 
 const addArtist = async(req, res) => {

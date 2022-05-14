@@ -268,8 +268,26 @@ const searchAlbums = async (req, res) => {
   })
 };
 
-const addTrack = async (req, res) => {
-  return
+const addTrack = async (req, response) => {
+  console.log(req.body);
+  const trackUri = req.body.track.uri;
+  const accessToken = req.body.user.accessToken;
+  const playlistId = req.body.user.playlistId;
+  const data = {
+    'uris': [trackUri]
+  }
+
+  await axios.post(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, data, {
+    headers: { 
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    }
+  }).then((res) => {
+    console.log(res);
+  }).catch((err) => {
+    console.log(err);
+  })
 }
 
 const getAlbumTracks = async (req, response) => {

@@ -61,7 +61,6 @@ const removeArtist = async(req, res) => {
     }).then((user) => {
         return res.status(200).json({
             message: "Removed artist", 
-
         })
     }).catch((err) => {
         console.log(err);

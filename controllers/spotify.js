@@ -269,7 +269,6 @@ const searchAlbums = async (req, res) => {
 };
 
 const addTrack = async (req, response) => {
-  console.log(req.body);
   const trackUri = req.body.track.uri;
   const accessToken = req.body.user.accessToken;
   const playlistId = req.body.user.playlistId;

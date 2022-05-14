@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
-const concertSchema = new mongoose.Schema({
+const artistSchema = new mongoose.Schema({
     artist: String, 
-    seenLive: Boolean
 })
 
 const userSchema = new mongoose.Schema(
@@ -10,7 +9,7 @@ const userSchema = new mongoose.Schema(
         name: String, 
         spotifyId: String,
         img: String,
-        artists: [concertSchema],
+        artists: [artistSchema],
         accessToken: String, 
         refreshToken: String, 
         playlistId: String

@@ -44,7 +44,13 @@ const editProfile = async(req, response) => {
 }
 
 const addArtist = async(req, res) => {
-
+    await db.User.findByIdAndUpdate(req.body.id, {
+        $addToSet: { artists: {artist: req.body.artist}}
+    }).then((user) => {
+        console.log(user)
+    }).catch((err) => {
+        console.log(err);
+    })
 }
 
 const destroy = async(req, response) => {

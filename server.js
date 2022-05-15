@@ -41,6 +41,4 @@ app.use('/api', routes);
 	
 /* ====== Server bind  ====== */
 // bind the application to the port via app.listen(number, optional function to do after bind)
-app.listen(PORT, function () {
-	console.log(`Scales live on stage http://localhost:${PORT}`);
-});
+app.listen(process.env.PORT || PORT)

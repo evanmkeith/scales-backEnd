@@ -3,7 +3,7 @@ const db = require('../models');
 
 const userInfo = async(req, res) => {
     await db.User.findById(req.body.id).then( (response) => {
-        const image = response.image ? response.img : 'https://picsum.photos/200/200?grayscale';
+        const image = response.img ? response.img : 'https://picsum.photos/200/200?grayscale';
 
         const user = {
             name: response.name,
@@ -27,7 +27,7 @@ const editProfile = async(req, response) => {
         req.body.body, 
         {new: true}).then(
         (res) => {
-            const image = res.image ? res.img : 'https://picsum.photos/200/200?grayscale';
+            const image = res.img ? res.img : 'https://picsum.photos/200/200?grayscale';
 
             const updatedUser = {
                 name: res.name, 
@@ -69,7 +69,6 @@ const removeArtist = async(req, res) => {
 
 const destroy = async(req, response) => {
     await db.User.findByIdAndDelete(req.body.id).then((res) => {
-        console.log(res);
         return response.status(200).json({
             message: "User Destroyed", 
             res

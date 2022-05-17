@@ -1,7 +1,6 @@
 const axios = require('axios'); 
 const Buffer = require('buffer/').Buffer
 const db = require('../models'); 
-// const jwt = require('jsonwebtoken');
 
 const requestAuth = (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID; 
@@ -46,14 +45,12 @@ const getUserSpotifyProfile = async(req, response, accessToken, refreshToken) =>
         'Content-Type' : 'application/json'
       }
     }).then((res) => {
-      console.log('User Spotify Profile: ', res.data);
       const spotifyUser = res.data;
       return findUserAccount(req, response, spotifyUser, accessToken, refreshToken);
     }).catch((error) => {
     console.log(error);
       if(error.request.status === 401){
         console.log(error);
-        console.log('refreshing token');
         refreshAuthToken();
         return getUserSpotifyProfile();
       } else{
@@ -77,7 +74,6 @@ const findUserAccount = async(req, response, spotifyUser, accessToken, refreshTo
         console.log(updatedUser);
       }
       ) 
-      //const token = jwt.sign({userId:  foundUser[0]._id}, "pestocat", {expiresIn: '6h'});
       const token = {
         userId: foundUser[0]._id, 
         accessToken: foundUser[0].accessToken,
@@ -116,25 +112,12 @@ const refreshAuthToken = async() => {
         }
       })
       .then((res) => {
-        console.log(res);
         accessToken = res.data.access_token; 
       })
       .catch((error) => {
         console.log(error)
       })
     }
-
-// const decodeJwt = (token) => {
-//   console.log(token)
-//   const base64Url = token.split('.')[1];
-//   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-//   const jsonPayload = decodeURIComponent(Buffer.from(base64, 'base64').toString('ascii').split('').map(function(c) {
-//       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-//   }).join(''));
-//   const id = JSON.parse(jsonPayload);
-
-//   return id
-// };
 
 const createSpotifyPlaylist = async(req, response) => {
   const userId = req.body.token.userId;
@@ -163,8 +146,15 @@ const createSpotifyPlaylist = async(req, response) => {
       console.log("Created Playlist: ",res.data.id); 
     })
     .catch((error) => {
-      console.log(error)
-    });
+      console.log(error);
+        if(error.request.status === 401){
+          console.log(error);
+          refreshAuthToken();
+          return createSpotifyPlaylist();
+        } else{
+          console.log("Error Message:\n ", error);
+        }
+      });
 
     return response.status(201).json({
       status: 201,
@@ -206,16 +196,20 @@ const getPlaylist = async(req, response) => {
     };
   }).catch((error) => {
     console.log(error);
-  })
+      if(error.request.status === 401){
+        console.log(error);
+        refreshAuthToken();
+        return getPlaylist();
+      } else{
+        console.log("Error Message:\n ", error);
+      }
+    })
 }
 
 const removeTrack = async(req, res) => {
   const uri = req.body.track.uri;
   const playlistId = req.body.user.playlistId;
   const accessToken = req.body.user.accessToken;
-  console.log("Access Token: ", accessToken);
-  console.log(`URI: ${uri}`);
-  console.log("playlistId: " ,playlistId)
 
   await axios.delete(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, { 
     headers: { 
@@ -232,8 +226,15 @@ const removeTrack = async(req, res) => {
       message: 'removed track',
     });
   }).catch((error) => {
-    console.error(error);
-  })
+    console.log(error);
+      if(error.request.status === 401){
+        console.log(error);
+        refreshAuthToken();
+        return removeTrack();
+      } else{
+        console.log("Error Message:\n ", error);
+      }
+    })
 };
 
 const searchAlbums = async (req, res) => {
@@ -265,7 +266,14 @@ const searchAlbums = async (req, res) => {
     })
   }).catch((error) => {
     console.log(error);
-  })
+      if(error.request.status === 401){
+        console.log(error);
+        refreshAuthToken();
+        return searchAlbums();
+      } else{
+        console.log("Error Message:\n ", error);
+      }
+    })
 };
 
 const addTrack = async (req, response) => {
@@ -284,9 +292,16 @@ const addTrack = async (req, response) => {
     }
   }).then((res) => {
     console.log(res);
-  }).catch((err) => {
-    console.log(err);
-  })
+  }).catch(((error) => {
+    console.log(error);
+      if(error.request.status === 401){
+        console.log(error);
+        refreshAuthToken();
+        return addTrack();
+      } else{
+        console.log("Error Message:\n ", error);
+      }
+    }))
 }
 
 const getAlbumTracks = async (req, response) => {
@@ -312,9 +327,16 @@ const getAlbumTracks = async (req, response) => {
     message: 'received tracks',
     albumTracks
     })
-  }).catch((err) => {
-    console.log(err);
-  })
+  }).catch((error) => {
+    console.log(error);
+      if(error.request.status === 401){
+        console.log(error);
+        refreshAuthToken();
+        return getAlbumTracks();
+      } else{
+        console.log("Error Message:\n ", error);
+      }
+    })
 }
 
 module.exports = {

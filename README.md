@@ -1,5 +1,4 @@
-# ApplicationName
-Scales - Back End
+# Scales - Back End
 
 Front-end [here](https://github.com/evanmkeith/scales-FE). 
 

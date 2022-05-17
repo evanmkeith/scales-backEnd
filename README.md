@@ -25,8 +25,26 @@ I want it to link up with my Spotify account so I can store this information and
     - Spotify API 
     - TicketMaster API
     - MongoDB
-    - 
 
+## How to Install:
+- You will first want to fork and clone down the repo onto your local device
+- npm i 
+- Fork and clone down the back-end [here]([https://github.com/evanmkeith/scales-backEnd](https://github.com/evanmkeith/scales-FE))
+- npm i 
+- npm i nodemon -g 
+- Create a MongoDB database
+- Create accounts with the follow APIs
+    - Spotify
+    - TicketMaster
+- npm i dotenv
+- create a .env file and add in your Spotify redirect uri, client ID, client secret, mongoDB link, and ticektMaster key 
+- make sure you add the redirect uri to your Spotify developers account. 
+- The backend is hosted on http://localhost:3000/ and the front end is on http://localhost:4000/
+- You can then open each repo in its own tab in your terminal and use nodemon to start each one. 
+- Voila! It should work once you navigate to http://localhost:4000/ in your browser. 
+
+## Future Development: 
+For my next iterations, I would like to refactor how I have setup the login & access flow. I would also like to re-do how I handle the refresh token - right now it probably wont work. I would also like to make this mobile friendly but did intend on making it desktop first so people could take a beat to listen to the whole album instead of on the go. 
 
 ## App Demo
 https://scales-music.herokuapp.com/
